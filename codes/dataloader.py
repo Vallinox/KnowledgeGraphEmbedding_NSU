@@ -8,6 +8,7 @@ import numpy as np
 import torch
 
 from torch.utils.data import Dataset
+import negative_sampling_NSU
 
 class TrainDataset(Dataset):
     def __init__(self, triples, nentity, nrelation, negative_sample_size, mode):
@@ -20,6 +21,8 @@ class TrainDataset(Dataset):
         self.mode = mode
         self.count = self.count_frequency(triples)
         self.true_head, self.true_tail = self.get_true_head_and_tail(self.triples)
+        self.all_triples = negative_sampling_NSU.convert_in_array(self.triples)
+
         
     def __len__(self):
         return self.len
@@ -36,7 +39,10 @@ class TrainDataset(Dataset):
         negative_sample_size = 0
 
         while negative_sample_size < self.negative_sample_size:
-            negative_sample = np.random.randint(self.nentity, size=self.negative_sample_size*2)
+
+            #negative_sample = np.random.randint(self.nentity, size=self.negative_sample_size*2)
+            negative_sample = negative_sampling_NSU.selection_corruption_candidate_triples(self.all_triples, head, relation, tail, self.negative_sample_size*5)
+
             if self.mode == 'head-batch':
                 mask = np.in1d(
                     negative_sample, 
