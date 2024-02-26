@@ -6,11 +6,35 @@ from __future__ import print_function
 
 import numpy as np
 import torch
+from collections import defaultdict
 
 from torch.utils.data import Dataset
-import negative_sampling_NSU
+from NTU import search_negative_useful, search_negative_head_useful
+
 
 class TrainDataset(Dataset):
+    
+    @staticmethod
+    def entity_schema(data):
+        Et = defaultdict(lambda: defaultdict(list))
+        for entity, relation, tail in data:
+            Et[entity][relation].append(tail)
+        return Et
+    
+    @staticmethod
+    def property_schema(data):
+        table_as_triples = set()
+        St = defaultdict(lambda: defaultdict(list))
+        St2 = defaultdict(lambda: defaultdict(list))
+
+        for entity, relation, tail in data:
+            St[tail][relation].append(entity)
+            St2[tail][relation].append(entity)
+            table_as_triples.add((entity, relation, tail))
+
+        return St,St2,table_as_triples
+
+
     def __init__(self, triples, nentity, nrelation, negative_sample_size, mode):
         self.len = len(triples)
         self.triples = triples
@@ -21,9 +45,9 @@ class TrainDataset(Dataset):
         self.mode = mode
         self.count = self.count_frequency(triples)
         self.true_head, self.true_tail = self.get_true_head_and_tail(self.triples)
-        self.all_triples = negative_sampling_NSU.convert_in_array(self.triples)
-
-        
+        self.e_schema = self.entity_schema(self.triples)
+        self.pr_schema, self.pr_schema2, self.table_as_triples = self.property_schema(self.triples)
+     
     def __len__(self):
         return self.len
     
@@ -39,29 +63,43 @@ class TrainDataset(Dataset):
         negative_sample_size = 0
 
         while negative_sample_size < self.negative_sample_size:
-
-            #negative_sample = np.random.randint(self.nentity, size=self.negative_sample_size*2)
-            negative_sample = negative_sampling_NSU.selection_corruption_candidate_triples(self.all_triples, head, relation, tail, self.negative_sample_size*5)
-
             if self.mode == 'head-batch':
-                mask = np.in1d(
-                    negative_sample, 
-                    self.true_head[(relation, tail)], 
-                    assume_unique=True, 
-                    invert=True
-                )
+                peers = search_negative_head_useful(tail,relation, self.e_schema, self.pr_schema2, self.table_as_triples, k=0)
             elif self.mode == 'tail-batch':
-                mask = np.in1d(
-                    negative_sample, 
-                    self.true_tail[(head, relation)], 
-                    assume_unique=True, 
-                    invert=True
-                )
+                peers = search_negative_useful(head,relation, self.e_schema, self.pr_schema, self.table_as_triples, k=1)
+            
+            if peers.size <= 0:
+                
+                negative_sample = np.random.randint(self.nentity, size=self.negative_sample_size*2)
+                if self.mode == 'head-batch':
+                  mask = np.in1d(
+                      negative_sample,
+                      self.true_head[(relation, tail)],
+                      assume_unique=True,
+                      invert=True
+                  )
+                elif self.mode == 'tail-batch':
+                  mask = np.in1d(
+                      negative_sample,
+                      self.true_tail[(head, relation)],
+                      assume_unique=True,
+                      invert=True
+                  )
+                else:
+                    raise ValueError('Training batch mode %s not supported' % self.mode)
+              
+                negative_sample = negative_sample[mask]
+                negative_sample_list.append(negative_sample)
+                negative_sample_size += negative_sample.size
+            
             else:
-                raise ValueError('Training batch mode %s not supported' % self.mode)
-            negative_sample = negative_sample[mask]
-            negative_sample_list.append(negative_sample)
-            negative_sample_size += negative_sample.size
+                
+                negative_sample = peers[np.random.randint(len(peers), size=self.negative_sample_size*2)]
+                #print(negative_sample)
+                negative_sample_list.append(negative_sample)
+                negative_sample_size += negative_sample.size
+            
+
         
         negative_sample = np.concatenate(negative_sample_list)[:self.negative_sample_size]
 
