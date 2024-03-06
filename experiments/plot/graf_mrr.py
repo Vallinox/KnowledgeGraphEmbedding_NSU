@@ -39,7 +39,7 @@ plt.plot(steps2, mrr_values2,linewidth=2, label='NTU')
 plt.plot(steps3, mrr_values3,linewidth=2, label='Variant-NTU')
 
 plt.title('MRR - ' + name_dataset)
-plt.xlabel('Step')
+plt.xlabel('Epochs')
 plt.ylabel('MRR')
 plt.legend()
 plt.grid(True)

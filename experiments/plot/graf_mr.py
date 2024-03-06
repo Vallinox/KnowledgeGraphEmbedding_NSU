@@ -40,7 +40,7 @@ plt.plot(steps3, mr_values3,linewidth=2, label='Variant-NTU')
 
 plt.yscale('log')
 plt.title('MR - ' + name_dataset)
-plt.xlabel('Step')
+plt.xlabel('Epochs')
 plt.ylabel('MR')
 plt.legend(loc="best")
 plt.grid(True)
