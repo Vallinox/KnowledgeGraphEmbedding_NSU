@@ -31,9 +31,12 @@ steps2, mrr_values2 = extract_mrr_from_log(path + name_dataset + '/train_ntu.log
 steps3, mrr_values3 = extract_mrr_from_log(path + name_dataset + '/train_variant_ntu.log')
 
 # Plot
-plt.plot(steps1, mrr_values1, marker='*', label='Self-Adversarial')
-plt.plot(steps2, mrr_values2, marker='D', label='NTU')
-plt.plot(steps3, mrr_values3, marker='.', label='Variant-NTU')
+plt.style.use("seaborn")
+print(plt.style.available)
+
+plt.plot(steps1, mrr_values1,linewidth=2, color="darkred", label='Self-Adversarial')
+plt.plot(steps2, mrr_values2,linewidth=2, label='NTU')
+plt.plot(steps3, mrr_values3,linewidth=2, label='Variant-NTU')
 
 plt.title('MRR - ' + name_dataset)
 plt.xlabel('Step')

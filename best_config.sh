@@ -10,6 +10,8 @@ bash run.sh train RotatE countries_S3 0 0 512 64 1000 0.1 1.0 0.000002 40000 8 -
 bash run.sh train RotatE YAGO3-10 0 0 1024 400 500 24.0 1.0 0.0002 100000 4 -de
 bash run.sh train RotatE DBpedia15K 0 0 1024 256 1000 9.0 1.0 0.00005 100000 16 -de
 bash run.sh train RotatE DBpedia100K 0 0 1024 400 500 24.0 1.0 0.0002 100000 4 -de
+bash run.sh train RotatE nations 0 0 512 64 1000 0.1 0.5 0.000002 40000 8 -de
+
 
 # Best Configuration for pRotatE
 #
