@@ -20,7 +20,7 @@ def extract_mr_from_log(log_file):
     return steps, mrr_values
 
 path = "/Users/valeriosegreto/PycharmProjects/KnowledgeGraphEmbedding_NTU/experiments/"
-name_dataset = "DBpedia100K"
+name_dataset = "DBpedia15k"
 # Estrai i dati dal primo file
 steps1, mr_values1 = extract_mr_from_log(path + name_dataset + '/train.log')
 
